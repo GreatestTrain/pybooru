@@ -32,6 +32,9 @@ echo "[Y/N]"
 set RESPONSE $(Read-Host)
 set PYTHON_CMD_ "${PYTHON} ./pybooru/test/safebooru_test.py"
 set PYTHON_CMD__ "${PYTHON} ./pybooru/test/wallhaven_test.py"
+if (!$RESPONSE) {
+    set RESPONSE "Y"
+}
 
 if ( $RESPONSE -eq "Y" ) {
     echo "Running safebooru_test"

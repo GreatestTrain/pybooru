@@ -54,9 +54,11 @@ function clone_repository() {
     return $?
 }
 
-check_if_installed "python3" && PYTHON=$APP \
+check_if_installed "python3" 
+PYTHON="$APP"
 clone_repository "https://github.com/GreatestTrain/pybooru.git" && \
 printf "${CYAN}Installing package...${NC}\n" && \
+# echo "$PYTHON"
 $PYTHON -m pip install "${PACKAGE_DIR}" && run_tests
 
 echo -e "\n"
