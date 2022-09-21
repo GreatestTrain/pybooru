@@ -2,6 +2,6 @@
 **/bin/**
 **/__pycache__/**
 **/build/**
-**/*Egg/**
+**/*egg-info/**
 
 boorus/**

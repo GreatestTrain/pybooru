@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from itertools import chain
 from urllib.parse import urlencode, urlparse
 from lxml.html import HtmlElement
 import json
@@ -8,6 +9,7 @@ import json
 from pybooru.classes.generic import PageWrapper, Page
 from pybooru.classes.image import Media
 from pybooru.utils.html_utils import def_elements, fetch_json
+from pybooru.utils.dataframe_utils import img_to_html
 # iterables
 
 # analisis
@@ -169,7 +171,9 @@ class GenericBooru(Page):
         self.mid = mid
         self.API_KEY = API_KEY
         self.USER_ID = USER_ID
+        self.search_query = None
         self.default_parameters = default_parameters
+        self.dataframe = None
     @property
     def api_parameters(self):
         if self.API_KEY and self.USER_ID:
@@ -187,7 +191,17 @@ class GenericBooru(Page):
         return self.search_query
         # print(criteria)
     
-    def search_generator(self, criteria: dict = {}, start:int = 0, end:int = 1, limit=100) -> PostPage:
+    def search_iterator(self, criteria: dict = {}, start:int = 0, end:int = 1, limit=None):
+        if not limit:
+            limit = self.default['limit']
+        generator = self.search_generator(criteria=criteria, start=start, end=end, limit=limit)
+        for postpage in generator:
+            for post in postpage.posts:
+                yield post
+    
+    def search_generator(self, criteria: dict = {}, start:int = 0, end:int = 1, limit=None) -> PostPage:
+        if not limit:
+            limit = self.default['limit']
         parameters = criteria | self.default | {'pid': start, 'limit': limit}
         search_url = self.search_url(parameters)
         # print(search_url)
@@ -216,3 +230,12 @@ class GenericBooru(Page):
             llist.append(pagepost.dataframe(save_params))
         df = pd.concat(llist, join='outer').reset_index().drop(columns='index')
         return df
+    # to do    
+    def _repr_html_(self):
+        if not self.dataframe:
+            self.dataframe = self.fetch_dataframe()
+        columns = ['id',self.default_parameters['DEFAULT_POST_KW']['img_key'],
+                   self.default_parameters['DEFAULT_POST_KW']['preview_key']]
+        sample = self.dataframe[columns].copy()
+        return sample.to_html(formatters={columns[2]: img_to_html}, escape=False, render_links=True, classes='\b" style="width: 100%;dispaly: table; table-layout: fixed;"')
+        
